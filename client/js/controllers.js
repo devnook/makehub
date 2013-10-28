@@ -32,7 +32,7 @@ angular.module('makeHub.controllers', ['flash']).
 
                 error: function() {
                   console.log('process error');
-                  flash('error', 'Something went wrong with your request. Are you logged in?');
+                  flash('danger', 'Something went wrong with your request. Are you logged in?');
                 },
             });
         }
@@ -45,11 +45,31 @@ angular.module('makeHub.controllers', ['flash']).
         $http.get(projectUrl).success(function(data) {
           console.log(data)
           if (data.error) {
-            flash('error', data.error);
+            flash('danger', data.error);
           } else {
             $scope.project = data;
           }
         });
+        
+        $scope.fork = function () {
+          var projectUrl = ['project', 'fork', $scope.project.id].join('/');
+          $.ajax({
+              url: projectUrl,
+              type: "POST",
+              data: $scope.project,
+              success: function(data) {
+                if (data.error) {
+                  flash(data.error);
+                } else {
+                  flash('Forked');
+                  window.location = '#/project/' + data.id;
+                }
+              },
+              error: function() {
+                console.log('process error');
+              },
+          });
+        };
 
         $scope.modify = function () {
           var projectUrl = ['project', $scope.project.id].join('/');

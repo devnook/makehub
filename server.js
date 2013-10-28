@@ -78,7 +78,7 @@ app.get('/auth/github',
 app.get('/auth/github/callback',
   github.passport.authenticate('github', { failureRedirect: '/login' }),
   function(req, res) {
-    res.redirect('/');
+    res.redirect('/#/create');
   });
 
 app.get('/logout', function(req, res){
@@ -129,12 +129,11 @@ app.post('/project/:projectId', function(req, res) {
         res.send(project);
       }
     });
-
 });
 
 app.get('/project/:projectId', function(req, res) {
     console.log([req.params.userId, req.params.projectId, 'raw'].join('/'));
-
+    var currentlyLoggedInUser = req.user._json.login;
     // https://api.github.com/gists/4224228
     github.conn.gists.get(
         {
@@ -149,7 +148,26 @@ app.get('/project/:projectId', function(req, res) {
             res.send({'error': 'This is not a makehub project.'})
           } else {
             var project = projectParser.parse(gist);
+            project.ownedByMe = currentlyLoggedInUser == gist.user.login;
             res.send(project);
+          }
+        }
+    );
+});
+
+app.post('/project/fork/:projectId', function(req, res) {
+    console.log("FORKING project " + req.params.projectId);
+    github.conn.gists.fork(
+        {
+            id: req.params.projectId
+        },
+        function(err, gist) {
+          console.log(err)
+          console.log(gist)
+          if (err) {
+            res.send({'error': JSON.parse(err.message).message})
+          } else {
+            res.send({id: gist.id});
           }
         }
     );
